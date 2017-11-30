@@ -23,21 +23,16 @@
 // have RFM69W/CW!
 
 int TRANSMITPERIOD = 200; // transmit a packet to gateway so often (in ms)
-int licz = 0;
-byte sendSize = 0;
 boolean requestACK = false;
 // SPIFlash flash(8, 0xEF30); //EF40 for 16mbit windbond chip
 RFM69 radio;
 
 typedef struct {
-  uint16_t nodeId; // store this nodeId
-  // unsigned long long int command; // oh yeah...
   byte data[255];
 } Payload;
 Payload payload;
 
 byte received[255];
-
 boolean is_complete = false;
 
 void blink(byte pin, int delay_ms) {
@@ -49,7 +44,7 @@ void blink(byte pin, int delay_ms) {
 
 void pong() {
   print('[');
-  // Sprintln(radio.SENDERID, DEC);
+  print(radio.SENDERID);
   print("] ");
   for (byte i = 0; i < radio.DATALEN; i++)
     print((char)radio.DATA[i]);
@@ -63,7 +58,6 @@ void pong() {
     delay(10);
   }
   blink(LED, 5);
-  // println();
 }
 
 void clean_payload_data() {
@@ -115,7 +109,7 @@ void loop() {
 
   // check for any received packets
   if (radio.receiveDone()) {
-    // pong();
+    pong();
   }
 
   int currPeriod = millis() / TRANSMITPERIOD;
