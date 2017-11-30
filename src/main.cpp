@@ -109,11 +109,9 @@ void loop() {
     send();
     lastPeriod = currPeriod;
   }
-
 }
 
 void serialEvent() {
-  int i = 0;
   while (Serial.available()) {
     byte incoming_byte = Serial.read();
     received.push_back(incoming_byte);
@@ -121,6 +119,5 @@ void serialEvent() {
     if (incoming_byte == 0x0A) {
       is_complete_frame = true;
     }
-    i++;
   }
 }
