@@ -35,7 +35,7 @@ typedef struct {
 Payload payload;
 
 vector<byte> received;
-boolean is_complete = false;
+boolean is_complete_frame = false;
 
 void blink(byte pin, int delay_ms) {
   pinMode(pin, OUTPUT);
@@ -87,7 +87,7 @@ void send() {
 
 long lastPeriod = -1;
 void loop() {
-  if (is_complete) {
+  if (is_complete_frame) {
     // accept only our glorious protocol
     if (received.front() == 0xFF) {
       print("ACCEPTED\n");
@@ -95,7 +95,7 @@ void loop() {
     } else {
       print("REJECTED\n");
     }
-    is_complete = false;
+    is_complete_frame = false;
     received.clear();
   }
 
@@ -119,7 +119,7 @@ void serialEvent() {
     received.push_back(incoming_byte);
     // Serial.println(received.front(), HEX);
     if (incoming_byte == 0x0A) {
-      is_complete = true;
+      is_complete_frame = true;
     }
     i++;
   }
