@@ -12,10 +12,10 @@ using namespace std;
 #define NODEID 99
 #define NETWORKID 100
 #define GATEWAYID 1
-#define FREQUENCY                                                              \
+#define FREQUENCY                                                                                                      \
   RF69_868MHZ // RF69_433MHZ //Match this with the version of your Moteino!
               // (others: RF69_433MHZ, RF69_868MHZ)
-#define KEY                                                                    \
+#define KEY                                                                                                            \
   "sampleEncryptKey" // has to be same 16 characters/bytes on all nodes, not
                      // more not less!
 #define LED 9
@@ -68,9 +68,7 @@ void setup() {
   // radio.setHighPower(); //uncomment only for RFM69HW!
   radio.encrypt(KEY);
   char buff[50];
-  sprintf(buff, "\nTransmitting at %d Mhz...\n",
-          FREQUENCY == RF69_433MHZ ? 433
-                                   : FREQUENCY == RF69_868MHZ ? 868 : 915);
+  sprintf(buff, "\nTransmitting at %d Mhz...\n", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
   print(buff);
 }
 
@@ -78,10 +76,11 @@ void send() {
   print("Sending struct (");
   print(sizeof(payload));
   print(" bytes) ... ");
-  if (radio.sendWithRetry(GATEWAYID, (const void *)(&payload), sizeof(payload)))
+  if (radio.sendWithRetry(GATEWAYID, (const void *)(&payload), sizeof(payload))) {
     print(" ok!\n");
-  else
+  } else {
     print(" nothing...\n");
+  }
   blink(LED, 3);
 }
 
