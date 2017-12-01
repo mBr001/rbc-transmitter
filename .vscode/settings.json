@@ -2,5 +2,6 @@
     "terminal.integrated.env.linux": {
         "PATH": "/home/stsdc/.platformio/penv/bin:/home/stsdc/bin:/home/stsdc/.local/bin:/home/stsdc/bin:/home/stsdc/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
     },
-    "C_Cpp.intelliSenseEngineFallback": "Enabled"
+    "C_Cpp.intelliSenseEngineFallback": "Enabled",
+    "git.ignoreLimitWarning": true
 }

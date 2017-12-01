@@ -1,28 +1,10 @@
 #include <RFM69.h>
 #include <SPI.h>
 #include <vector>
+#include <defines.h>
 //#include <SPIFlash.h>
 using namespace std;
-// disables or enables printing to serial
-#define print(var) Serial.print(var)
-// #define print(var)
 
-#define NODEID 99
-#define NETWORKID 100
-#define GATEWAYID 1
-#define FREQUENCY                                                                                                      \
-  RF69_868MHZ // RF69_433MHZ //Match this with the version of your Moteino!
-              // (others: RF69_433MHZ, RF69_868MHZ)
-#define KEY                                                                                                            \
-  "sampleEncryptKey" // has to be same 16 characters/bytes on all nodes, not
-                     // more not less!
-#define LED 9
-#define BAUDRATE 57600
-#define ACK_TIME 50 // # of ms to wait for an ack
-//#define IS_RFM69HW_HCW  //uncomment only for RFM69HW/HCW! Leave out if you
-// have RFM69W/CW!
-
-int TRANSMITPERIOD = 200; // transmit a packet to gateway so often (in ms)
 int licz = 0;
 byte sendSize = 0;
 boolean requestACK = false;
@@ -53,7 +35,7 @@ void pong() {
 
   if (radio.ACKRequested()) {
     radio.sendACK();
-    print(" - ACK sent");
+    print(" - ACK sent\n");
     delay(10);
   }
   blink(LED, 5);
@@ -80,6 +62,7 @@ void send() {
   print("Sending (");
   print(sizeof(data));
   print(" bytes) ... ");
+  print(data[0]);
   if (radio.sendWithRetry(GATEWAYID, (const void *)(&data), sizeof(data))) {
     print(" ok!\n");
   } else {
@@ -108,7 +91,7 @@ void loop() {
         print(nr_packets_to_send);
         print(" packet(s)\n");
         for (int i = 0; i < nr_packets_to_send; i++) {
-          slice61(received, 0);
+          slice61(received, i);
           send();
           clear_data();
         }
@@ -125,7 +108,7 @@ void loop() {
   }
 
   if (radio.receiveDone()) {
-    // pong();
+    pong();
   }
 
   // int currPeriod = millis() / TRANSMITPERIOD;
