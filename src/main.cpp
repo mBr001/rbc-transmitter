@@ -29,7 +29,7 @@ boolean requestACK = false;
 // SPIFlash flash(8, 0xEF30); //EF40 for 16mbit windbond chip
 RFM69 radio;
 
-byte data[255];
+byte data[61];
 vector<byte> received;
 
 boolean is_complete_frame = false;
@@ -60,18 +60,24 @@ void pong() {
   // println();
 }
 
+void slice61(vector<byte> received, int i) {
+  vector<byte>::const_iterator first = received.begin() + 61 * i;
+  vector<byte>::const_iterator last = first + 61;
+  copy(first, last, data);
+}
+
 void setup() {
   Serial.begin(BAUDRATE);
   radio.initialize(FREQUENCY, NODEID, NETWORKID);
   // radio.setHighPower(); //uncomment only for RFM69HW!
   radio.encrypt(KEY);
   char buff[50];
-  sprintf(buff, "\nTransmitting at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
+  sprintf(buff, "\nTransmitting at %d Mhz...\n", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
   print(buff);
 }
 
 void send() {
-  print("Sending struct (");
+  print("Sending (");
   print(sizeof(data));
   print(" bytes) ... ");
   if (radio.sendWithRetry(GATEWAYID, (const void *)(&data), sizeof(data))) {
@@ -79,16 +85,35 @@ void send() {
   } else {
     print(" nothing...\n");
   }
+
   blink(LED, 3);
 }
+
+void clear_data() { memset(&data[0], 0, sizeof(data)); }
 
 long lastPeriod = -1;
 void loop() {
   if (is_complete_frame) {
     // accept only our glorious protocol
     if (received.front() == 0xFF) {
-      print("ACCEPTED: ");
-      copy(received.begin(), received.end(), data);
+      int nr_packets_to_send = (int)ceil(received.size() / 61.0);
+      print("ACCEPTED. Need to send: ");
+      if (received.size() <= 61) {
+        print(nr_packets_to_send);
+        print(" packet(s)\n");
+        slice61(received, 0);
+        send();
+        clear_data();
+      } else {
+        print(nr_packets_to_send);
+        print(" packet(s)\n");
+        for (int i = 0; i < nr_packets_to_send; i++) {
+          slice61(received, 0);
+          send();
+          clear_data();
+        }
+      }
+
       // std::vector<double> v;
       // double *a = &v[0];
       print("\n");
@@ -103,11 +128,11 @@ void loop() {
     // pong();
   }
 
-  int currPeriod = millis() / TRANSMITPERIOD;
-  if (currPeriod != lastPeriod) {
-    send();
-    lastPeriod = currPeriod;
-  }
+  // int currPeriod = millis() / TRANSMITPERIOD;
+  // if (currPeriod != lastPeriod) {
+  //   send();
+  //   lastPeriod = currPeriod;
+  // }
 }
 
 void serialEvent() {
