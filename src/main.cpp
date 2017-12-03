@@ -58,12 +58,12 @@ void setup() {
   print(buff);
 }
 
-void send() {
+void send(byte data[], uint8_t size) {
   print("Sending (");
-  print(sizeof(data));
+  print(size);
   print(" bytes) ... ");
   print(data[0]);
-  if (radio.sendWithRetry(GATEWAYID, (const void *)(&data), sizeof(data))) {
+  if (radio.sendWithRetry(GATEWAYID, (const void *)(data), size)) {
     print(" ok!\n");
   } else {
     print(" nothing...\n");
@@ -85,14 +85,14 @@ void loop() {
         print(nr_packets_to_send);
         print(" packet(s)\n");
         slice61(received, 0);
-        send();
+        send(data,sizeof(data));
         clear_data();
       } else {
         print(nr_packets_to_send);
         print(" packet(s)\n");
         for (int i = 0; i < nr_packets_to_send; i++) {
           slice61(received, i);
-          send();
+          send(data, sizeof(data));
           clear_data();
         }
       }
