@@ -11,7 +11,8 @@ boolean requestACK = false;
 // SPIFlash flash(8, 0xEF30); //EF40 for 16mbit windbond chip
 RFM69 radio;
 
-byte data[61];
+byte manipulator_data[61];
+byte platform_data[12];
 vector<byte> received;
 
 boolean is_complete_frame = false;
@@ -42,10 +43,10 @@ void pong() {
   // println();
 }
 
-void slice61(vector<byte> received, int i) {
+void slice61(byte platform_data[], vector<byte> received, int i) {
   vector<byte>::const_iterator first = received.begin() + 61 * i;
   vector<byte>::const_iterator last = first + 61;
-  copy(first, last, data);
+  copy(first, last, platform_data);
 }
 
 void setup() {
@@ -58,12 +59,12 @@ void setup() {
   print(buff);
 }
 
-void send(byte data[], uint8_t size) {
+void send(byte data[], uint8_t data_size) {
   print("Sending (");
-  print(size);
+  print(data_size);
   print(" bytes) ... ");
   print(data[0]);
-  if (radio.sendWithRetry(GATEWAYID, (const void *)(data), size)) {
+  if (radio.sendWithRetry(GATEWAYID, (const void *)(data), data_size)) {
     print(" ok!\n");
   } else {
     print(" nothing...\n");
@@ -72,7 +73,7 @@ void send(byte data[], uint8_t size) {
   blink(LED, 3);
 }
 
-void clear_data() { memset(&data[0], 0, sizeof(data)); }
+void clear_data(byte data[], uint8_t data_size) { memset(&data[0], 0, data_size); }
 
 long lastPeriod = -1;
 void loop() {
@@ -81,19 +82,22 @@ void loop() {
     if (received.front() == 0xFF) {
       int nr_packets_to_send = (int)ceil(received.size() / 61.0);
       print("ACCEPTED. Need to send: ");
-      if (received.size() <= 61) {
+      // only platform frame has 12 bytes
+      if (received.size() == 12) {
         print(nr_packets_to_send);
         print(" packet(s)\n");
-        slice61(received, 0);
-        send(data,sizeof(data));
-        clear_data();
+        vector<byte>::const_iterator first = received.begin();
+        vector<byte>::const_iterator last = first + 12;
+        copy(first, last, platform_data);
+        send(platform_data, sizeof(platform_data));
+        clear_data(platform_data, sizeof(platform_data));
       } else {
         print(nr_packets_to_send);
         print(" packet(s)\n");
         for (int i = 0; i < nr_packets_to_send; i++) {
-          slice61(received, i);
-          send(data, sizeof(data));
-          clear_data();
+          slice61(manipulator_data, received, i);
+          send(manipulator_data, sizeof(manipulator_data));
+          clear_data(manipulator_data, sizeof(manipulator_data));
         }
       }
 
