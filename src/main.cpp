@@ -1,7 +1,7 @@
 #include <RFM69.h>
 #include <SPI.h>
-#include <vector>
 #include <defines.h>
+#include <vector>
 //#include <SPIFlash.h>
 using namespace std;
 
@@ -12,7 +12,15 @@ boolean requestACK = false;
 RFM69 radio;
 
 byte manipulator_data[61];
-byte platform_data[12];
+
+typedef struct {
+  uint16_t nodeId; // store this nodeId
+  int pwm1;        // erature maybe?
+  int pwm2;
+} Payload;
+Payload platform_data;
+char tmp[6];
+// byte platform_data[12];
 vector<byte> received;
 
 boolean is_complete_frame = false;
@@ -73,37 +81,50 @@ void send(byte data[], uint8_t data_size) {
   blink(LED, 3);
 }
 
+void send_struct() {
+  print("Sending struct (");
+  print(sizeof(platform_data));
+  print(" bytes) ... ");
+  if (radio.sendWithRetry(GATEWAYID, (const void *)(&platform_data), sizeof(platform_data)))
+    print(" ok!\n");
+  else
+    print(" nothing...\n");
+  blink(LED, 3);
+}
+
 void clear_data(byte data[], uint8_t data_size) { memset(&data[0], 0, data_size); }
 
 long lastPeriod = -1;
 void loop() {
   if (is_complete_frame) {
-    // accept only our glorious protocol
-    if (received.front() == 0xFF) {
-      int nr_packets_to_send = (int)ceil(received.size() / 61.0);
-      print("ACCEPTED. Need to send: ");
-      // only platform frame has 12 bytes
-      if (received.size() == 12) {
-        print(nr_packets_to_send);
-        print(" packet(s)\n");
-        vector<byte>::const_iterator first = received.begin();
-        vector<byte>::const_iterator last = first + 12;
-        copy(first, last, platform_data);
-        send(platform_data, sizeof(platform_data));
-        clear_data(platform_data, sizeof(platform_data));
-      } else {
-        print(nr_packets_to_send);
-        print(" packet(s)\n");
-        for (int i = 0; i < nr_packets_to_send; i++) {
-          slice61(manipulator_data, received, i);
-          send(manipulator_data, sizeof(manipulator_data));
-          clear_data(manipulator_data, sizeof(manipulator_data));
-        }
-      }
+    int nr_packets_to_send = (int)ceil(received.size() / 61.0);
 
-      // std::vector<double> v;
-      // double *a = &v[0];
-      print("\n");
+    // accept only our glorious protocol
+    if (received.front() == 0x46) {
+      // only platform frame has 12 bytes
+      print("ACCEPTED. Platform frame.\n");
+      for (int i = 0; i < 4; i++) {
+        tmp[i] = received[i + 6];
+      }
+      platform_data.pwm1 = atoi(tmp);
+      for (int i = 0; i < 4; i++) {
+        tmp[i] = received[i + 10];
+      }
+      platform_data.pwm2 = atoi(tmp);
+
+      print(platform_data.pwm1);
+      print(" ");
+      print(platform_data.pwm2);
+      send_struct();
+    } else if (received.front() == 0xFF) {
+      print("ACCEPTED. Need to send: ");
+      print(nr_packets_to_send);
+      print(" packet(s)\n");
+      for (int i = 0; i < nr_packets_to_send; i++) {
+        slice61(manipulator_data, received, i);
+        send(manipulator_data, sizeof(manipulator_data));
+        clear_data(manipulator_data, sizeof(manipulator_data));
+      }
     } else {
       print("REJECTED\n");
     }
