@@ -6,7 +6,7 @@
 #define print(var)
 #endif
 
-#define NODEID 99
+#define NODEID 2
 #define NETWORKID 100
 #define GATEWAYID 1
 #define FREQUENCY RF69_868MHZ  // RF69_433MHZ (others: RF69_433MHZ, RF69_868MHZ)
@@ -15,3 +15,4 @@
 #define BAUDRATE 57600
 #define ACK_TIME 50 // # of ms to wait for an ack
 #define TRANSMITPERIOD 200 // transmit a packet to gateway so often (in ms)
+#define PROMISCUOUS_MODE false // set to 'true' to sniff all packets on the same network

@@ -94,6 +94,20 @@ void send_struct() {
 
 void clear_data(byte data[], uint8_t data_size) { memset(&data[0], 0, data_size); }
 
+void show_debug_data() {
+  print("[FROM:");
+  print(radio.SENDERID);
+  print("] ");
+  print(" [RX_RSSI:");
+  print(radio.readRSSI());
+  print("]");
+  if (PROMISCUOUS_MODE) {
+    print("to [");
+    print(radio.TARGETID);
+    print("] ");
+  }
+}
+
 long lastPeriod = -1;
 void loop() {
   if (is_complete_frame) {
@@ -133,6 +147,14 @@ void loop() {
   }
 
   if (radio.receiveDone()) {
+    show_debug_data();
+    for (int i = 0; i < radio.DATALEN; i++) { // loop through all the new bytes
+      // data[i] = radio.DATA[i];
+      // Serial.println();
+      // print(" ");
+      // print(radio.DATA[i]);
+      Serial.write(radio.DATA[i]);
+    }
     pong();
   }
 
